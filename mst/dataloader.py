@@ -166,7 +166,7 @@ class MultitrackDataset(torch.utils.data.Dataset):
             with open(split, "r") as f:
                 data = yaml.safe_load(f)
                 for songs, track_info in data[self.subset].items():
-                    full_song_dir = directory + songs
+                    full_song_dir = os.path.join(directory, songs)
                     self.song_dirs[full_song_dir] = track_info
                     self.dirs.append(full_song_dir)
 
