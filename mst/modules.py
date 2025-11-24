@@ -1160,7 +1160,6 @@ class SpatialCLAPEncoder(nn.Module):
     def __init__(
         self,
         embed_dim: int = 512,
-        n_inputs: int = 1,
         joint_embed_shape: int = 512,
         pretrained: bool = True,
         sample_rate: int = 44100,

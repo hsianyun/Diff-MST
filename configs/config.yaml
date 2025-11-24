@@ -5,9 +5,9 @@ trainer:
   logger: 
     class_path: pytorch_lightning.loggers.WandbLogger
     init_args:
-      project: DiffMST_Original
+      project: DiffMST_SpatialCLAP
       # change to the directory where you want to save wandb logs
-      save_dir: /mnt/gestalt/home/rakec/output/diff-mst/8tracks-orig-stage1
+      save_dir: /mnt/gestalt/home/rakec/output/diff-mst/8tracks-spatial_clap-stage1
   enable_checkpointing: true
   callbacks:
     - class_path: mst.callbacks.audio.LogAudioCallback
