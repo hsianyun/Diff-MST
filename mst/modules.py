@@ -10,7 +10,7 @@ from torchaudio.pipelines import HDEMUCS_HIGH_MUSDB_PLUS
 from mst.panns import Cnn14
 
 # For Spatial-CLAP and CLAP
-from htsat import create_htsat_model
+from mst.htsat import create_htsat_model
 from transformers import RobertaModel, RobertaTokenizer
 import laion_clap
 import torchaudio
@@ -1220,7 +1220,7 @@ class SpatialCLAPEncoder(nn.Module):
         resampler = torchaudio.transforms.Resample(
             orig_freq = self.sample_rate,
             new_freq = 16000,
-        )
+        ).to(x.device)
         
         x_origin = x
         x_16k = resampler(x)
