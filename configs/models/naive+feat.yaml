@@ -46,30 +46,30 @@ model:
         # track_encoder:
         #   class_path: mst.modules.CLAPEncoder
         #   init_args:
-        #     sample_rate: 48000
+        #     sample_rate: 44100
         #     freeze: true
         #     ckpt_path: /mnt/gestalt/home/rakec/checkpoint/CLAP/music_audioset_epoch_15_esc_90.14.pt
         #     htsat_base: true
-        # mix_encoder: 
-        #   class_path: mst.modules.SpectrogramEncoder
-        #   init_args:
-        #     embed_dim: 512
-        #     n_fft: 2048
-        #     hop_length: 512
-        #     input_batchnorm: false
+        mix_encoder: 
+          class_path: mst.modules.SpectrogramEncoder
+          init_args:
+            embed_dim: 512
+            n_fft: 2048
+            hop_length: 512
+            input_batchnorm: false
         # mix_encoder:
         #   class_path: mst.modules.SpatialCLAPEncoder
         #   init_args:
         #     joint_embed_shape: 512
         #     pretrained: true
         #     sample_rate: 44100
-        mix_encoder:
-          class_path: mst.modules.CLAPEncoder
-          init_args:
-            sample_rate: 48000
-            freeze: true
-            ckpt_path: /mnt/gestalt/home/rakec/checkpoint/CLAP/music_audioset_epoch_15_esc_90.14.pt
-            htsat_base: true
+        # mix_encoder:
+        #   class_path: mst.modules.CLAPEncoder
+        #   init_args:
+        #     sample_rate: 44100
+        #     freeze: true
+        #     ckpt_path: /mnt/gestalt/home/rakec/checkpoint/CLAP/music_audioset_epoch_15_esc_90.14.pt
+        #     htsat_base: true
         controller:
           class_path: mst.modules.TransformerController
           init_args:

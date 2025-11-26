@@ -5,9 +5,9 @@ trainer:
   logger: 
     class_path: pytorch_lightning.loggers.WandbLogger
     init_args:
-      project: DiffMST_CLAP_48k
+      project: DiffMST_Original
       # change to the directory where you want to save wandb logs
-      save_dir: /mnt/gestalt/home/rakec/output/diff-mst/8tracks-clap_48k-stage1
+      save_dir: /mnt/gestalt/home/rakec/output/diff-mst/8tracks-original-stage1
   enable_checkpointing: true
   callbacks:
     - class_path: mst.callbacks.audio.LogAudioCallback
@@ -33,9 +33,9 @@ trainer:
   gradient_clip_val: 10.0
   devices: 1
   check_val_every_n_epoch: 1
-  max_epochs: 1000
+  max_epochs: 500
   # change to log less or more often to wandb
-  log_every_n_steps: 500
+  log_every_n_steps: 250
   accelerator: gpu
   strategy: ddp_find_unused_parameters_true
   sync_batchnorm: true

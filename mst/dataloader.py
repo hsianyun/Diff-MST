@@ -137,7 +137,7 @@ class MultitrackDataset(torch.utils.data.Dataset):
         target_track_lufs_db: float = -32.0,
         target_mix_lufs_db: float = -16.0,
         randomize_ref_mix_gain: bool = False,
-        num_examples_per_epoch: int = 20000,
+        num_examples_per_epoch: int = 2500,
         num_passes: int = 1,
     ) -> None:
         super().__init__()
