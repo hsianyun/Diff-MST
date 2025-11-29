@@ -299,11 +299,9 @@ class MultitrackDataset(torch.utils.data.Dataset):
                 if track.size()[0] > 2:
                     continue
 
-
                 track_lufs_db = self.meter.integrated_loudness(
                     track.permute(1, 0).numpy()
                 )
-
 
                 if track_lufs_db < -48.0 or track_lufs_db == float("-inf"):
                     continue
