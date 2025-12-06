@@ -188,6 +188,7 @@ def run_diffmst(
         pred_track_param_dict,
         pred_fx_bus_param_dict,
         pred_master_bus_param_dict,
+        pred_mixed_tracks,
     )
 
 
@@ -252,7 +253,7 @@ def load_diffmst(config_path: str, ckpt_path: str, map_location: str = "cpu"):
     for k, v in checkpoint["state_dict"].items():
         if k.startswith("model.mix_encoder"):
             state_dict[k.replace("model.mix_encoder.", "", 1)] = v
-    mix_encoder.load_state_dict(state_dict)
+    mix_encorde.load_state_dict(state_dict)
 
     state_dict = {}
     for k, v in checkpoint["state_dict"].items():

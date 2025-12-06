@@ -1351,3 +1351,4 @@ class CLAPEncoder(nn.Module):
         X = X.view(bs, chs, -1)
 
         return X
+    
