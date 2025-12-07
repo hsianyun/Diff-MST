@@ -43,6 +43,7 @@ def batch_stereo_tracks_peak_normalize(x: torch.Tensor):
     gain_lin = mix.abs().max(dim=-1, keepdim=True)[0]
     # then find the maximum peak across left and right per batch item
     gain_lin = gain_lin.max(dim=-2, keepdim=True)[0]
+    gain_lin = gain_lin.unsqueeze(2)
     # normalize by the maximum peak
     x_norm = x / gain_lin.clamp(1e-8)  # avoid division by zero
     return x_norm
