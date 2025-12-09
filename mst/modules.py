@@ -8,6 +8,7 @@ import numpy as np
 from typing import Callable, Optional, List
 from torchaudio.pipelines import HDEMUCS_HIGH_MUSDB_PLUS
 from mst.panns import Cnn14
+from mst.utils import text_optimize
 
 # For Spatial-CLAP and CLAP
 from mst.htsat import create_htsat_model
@@ -44,12 +45,19 @@ class MixStyleTransferModel(torch.nn.Module):
         tracks: torch.torch.Tensor,
         ref_mix: torch.torch.Tensor,
         track_padding_mask: Optional[torch.Tensor] = None,
+        optimization_config: dict = None,
+        text: str = None,
+        text_model = None,
     ):
         bs, num_tracks, seq_len = tracks.size()
 
         # first process the tracks
         track_embeds = self.track_encoder(tracks.view(bs * num_tracks, 1, -1))
         track_embeds = track_embeds.view(bs, num_tracks, -1)  # restore
+
+        # perform text-based optimization if specified
+        if optimization_config is not None and optimization_config["use-text-optimization"] and optimization_config["use-master-bus-optimization"]:
+            track_embeds = text_optimize(track_embeds, text, text_model, optimization_config)
 
         # compute mid/side from the reference mix
         if self.mix_encoder.__class__.__name__ in ["SpatialCLAPEncoder"]:
@@ -1265,4 +1273,3 @@ class CLAPEncoder(nn.Module):
         X = X.view(bs, chs, -1)
 
         return X
-    

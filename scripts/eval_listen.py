@@ -3,9 +3,10 @@ import os
 import torch
 import torchaudio
 import pyloudnorm as pyln
-import laion_clap
-from mst.utils import load_diffmst, run_diffmst
+from mst.utils import load_diffmst, run_diffmst, text_optimize
+from mst.modules import CLAPEncoder
 import numpy as np
+import laion_clap
 
 
 def equal_loudness_mix(tracks: torch.Tensor, *args, **kwargs):
@@ -40,10 +41,15 @@ if __name__ == "__main__":
     output_dir = "outputs/listen_1"
     use_text_optimize = True
     os.makedirs(output_dir, exist_ok=True)
-    clap_model = laion_clap.CLAP_Module(enable_fusion=True)
+
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
     optimize_option = "slerp"
     # optimize_option = "ADAM"
+
+    text_model = laion_clap.CLAP_Module(enable_fusion=False)
+    text_model.load_ckpt()
+
+    audio_model = CLAPEncoder()
 
     methods = {
         "diffmst-16": {
@@ -57,6 +63,16 @@ if __name__ == "__main__":
             "model": (None, None),
             "func": equal_loudness_mix,
         },
+    }
+
+    optimization_config = {
+        "use-text-optimization": True,
+        "use-seperate-track-optimization": False,
+        "use-master-bus-optimization": False,
+        "method": "slerp",      # Can be "slerp", "linear", or "adam"
+        "track_index": 0,       # Index of the track to optimize (For seperate track optimization)
+        "alpha": 0.4,           # Parameter for slerp and linear
+        "steps": None           # Parameter for adam
     }
 
     # get the validation examples
@@ -233,6 +249,9 @@ if __name__ == "__main__":
                             mix_console,
                             track_start_idx=track_start_idx,
                             ref_start_idx=ref_start_idx,
+                            optimization_config=optimization_config,
+                            text = "Make it sound brighter",
+                            text_model = text_model,
                         )
 
                         (
@@ -278,10 +297,8 @@ if __name__ == "__main__":
                     )
                     torchaudio.save(mix_filepath, mix_analysis.view(chs, -1), 44100)
                     
-                    if method_name == "diffmst-16" and use_text_optimize:
-                        track_idx = 0
+                    if method_name == "diffmst-16" and optimization_config["use-text-optimization"]:
                         text = "Make it sound brighter"
-                        text_tokens = clap_model.get_text_tokens([text], device=device)
                         
                         # pred_mixed_tracks: batchsize, 2, num_tracks, seq_len
                         # projection layer: batchsize, 2*num_tracks, seq_len
@@ -301,61 +318,14 @@ if __name__ == "__main__":
                                     audio_batch.append(waveform)
                             audio_batch = torch.stack(audio_batch, dim=0).to(device)  # (2*num_tracks, seq_len)
                             # get the embeddings for this batch
-                            batch_track_embeddings = clap_model.get_audio_embedding(audio_batch, use_tensor=True) # (2*num_tracks, D)
+                            batch_track_embeddings = audio_model(audio_batch) # (2*num_tracks, D)
                         
                             track_embeddings.append(batch_track_embeddings)
                         # stack into (bs, num_tracks, D)
                         track_embeddings = torch.stack(track_embeddings, dim=0) # (bs, 2*num_tracks, D)                        
                         
-                        if optimize_option == "slerp":
-                            alpha = 0.2
-                            for i in range(2):
-                                track_embedding = track_embeddings[0, i * num_tracks + track_idx, :]  # (D,)
-                                text_token = text_tokens[0, :]  # (token_len,)
-
-                                # normalize the embeddings
-                                track_embedding_norm = track_embedding / track_embedding.norm(dim=0, keepdim=True)
-                                text_token_norm = text_token / text_token.norm(dim=0, keepdim=True)
-
-                                # slerp interpolation
-                                omega = torch.acos(torch.clamp(torch.dot(track_embedding_norm, text_token_norm), -1.0, 1.0))
-                                so = torch.sin(omega)
-                                if so == 0:
-                                    slerp_embedding = track_embedding
-                                else:
-                                    slerp_embedding = (torch.sin((1.0 - alpha) * omega) / so) * track_embedding + (torch.sin(alpha * omega) / so) * text_embedding
-
-                                # replace the embedding
-                                track_embeddings[0, i * num_tracks + track_idx, :] = slerp_embedding
-                                
-                            
-                        elif optimize_option == "ADAM":
-                            for i in range(2):
-                                # Define the optimizer for the track embeddings
-                                optimizer = torch.optim.Adam(
-                                    [track_embeddings[0, i * num_tracks + track_idx, :]], lr=1e-3
-                                )
-
-                                # Optimization loop
-                                for step in range(100):  # Number of optimization steps
-                                    optimizer.zero_grad()
-
-                                    # Compute the loss (example: cosine similarity loss)
-                                    track_embedding = track_embeddings[0, i * num_tracks + track_idx, :]
-                                    text_token = text_tokens[0, :]
-
-                                    # Normalize the embeddings
-                                    track_embedding_norm = track_embedding / track_embedding.norm(dim=0, keepdim=True)
-                                    text_token_norm = text_token / text_token.norm(dim=0, keepdim=True)
-
-                                    # Cosine similarity loss
-                                    loss = -torch.dot(track_embedding_norm, text_token_norm)
-
-                                    # Backpropagation
-                                    loss.backward()
-                                    optimizer.step()
-
-                                print(f"Optimization completed for track {track_idx} with final loss: {loss.item()}")
+                        # optimize the track embedding towards the text embedding
+                        text_optimize(track_embeddings, text, text_model, optimization_config)
                     else: 
                         pass
                         

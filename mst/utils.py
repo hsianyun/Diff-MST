@@ -55,6 +55,9 @@ def run_diffmst(
     mix_console: torch.nn.Module,
     track_start_idx: int = 0,
     ref_start_idx: int = 0,
+    optimization_config: dict = None,
+    text: str = None,
+    text_model: torch.nn.Module = None,
 ):
     """Run the differentiable mix style transfer model.
 
@@ -65,6 +68,8 @@ def run_diffmst(
         mix_console (torch.nn.Module): MixConsole instance.
         track_start_idx (int, optional): Start index of the track to use. Default: 0.
         ref_start_idx (int, optional): Start index of the reference mix to use. Default: 0.
+        optimization_config (dict, optional): Configuration for text-based optimization. Default: None.
+        text (str, optional): Text prompt for optimization. Default: None.
 
     Returns:
         pred_mix (Tensor): Predicted mix with shape (bs, 2, seq_len).
@@ -134,7 +139,7 @@ def run_diffmst(
 
     #  ---- run model to estimate mix parmaeters using analysis audio ----
     pred_track_params, pred_fx_bus_params, pred_master_bus_params = model(
-        norm_analysis_tracks, analysis_ref
+        norm_analysis_tracks, analysis_ref, text=text, optimization_config=optimization_config, text_model=text_model
     )
 
     # ------- generate a mix using the predicted mix console parameters -------
@@ -254,7 +259,7 @@ def load_diffmst(config_path: str, ckpt_path: str, map_location: str = "cpu"):
     for k, v in checkpoint["state_dict"].items():
         if k.startswith("model.mix_encoder"):
             state_dict[k.replace("model.mix_encoder.", "", 1)] = v
-    mix_encorde.load_state_dict(state_dict)
+    mix_encoder.load_state_dict(state_dict)
 
     state_dict = {}
     for k, v in checkpoint["state_dict"].items():
@@ -379,3 +384,79 @@ def common_member(a, b):
         return True
     else:
         return False
+
+def text_optimize(track_embeddings: torch.Tensor ,text: str, text_model:  torch.nn.Module, optimization_config: dict):
+    """Optimize track embeddings towards text embeddings.
+
+    Args:
+        track_embeddings (Tensor): Track embeddings with shape (1, num_tracks, embed_dim).
+        text (str): Text prompt for optimization.
+        text_model (torch.nn.Module): Text embedding model.
+        optimization_config (dict): Configuration for optimization.
+
+    Returns:
+        track_embeddings (Tensor): Optimized track embeddings with shape (1, num_tracks, embed_dim).
+    """
+    method = optimization_config["method"]
+    alpha = optimization_config["alpha"]
+    step = optimization_config["steps"]
+    track_idx = optimization_config["track_index"] if optimization_config["use-seperate-track-optimization"] else 0
+    bs = track_embeddings.shape[0]
+    num_tracks = track_embeddings.shape[1] // 2    # because stereo
+
+    text_embeddings = text_model.get_text_embeddings([text])
+    # get text embeddings
+    text_token = text_embeddings[0, :]  # (token_len,)
+    
+    for j in range(bs):
+        for i in range(2):
+            track_embedding = track_embeddings[j, i * num_tracks + track_idx, :]  # (D,)
+            if method == "slerp":
+                # normalize the embeddings
+                track_embedding_norm = track_embedding / track_embedding.norm(dim=0, keepdim=True)
+                text_token_norm = text_token / text_token.norm(dim=0, keepdim=True)
+
+                # slerp interpolation
+                omega = torch.acos(torch.clamp(torch.dot(track_embedding_norm, text_token_norm), -1.0, 1.0))
+                so = torch.sin(omega)
+                if so == 0:
+                    slerp_embedding = track_embedding
+                else:
+                    slerp_embedding = (torch.sin((1.0 - alpha) * omega) / so) * track_embedding + (torch.sin(alpha * omega) / so) * text_token
+
+                # replace the embedding
+                track_embeddings[0, i * num_tracks + track_idx, :] = slerp_embedding
+
+            elif method == "linear":
+                # linear interpolation
+                lerp_embedding = (1.0 - alpha) * track_embedding + alpha * text_token
+
+                track_embeddings[0, i * num_tracks + track_idx, :] = lerp_embedding
+        
+            elif method == "adam":
+                # Define the optimizer for the track embeddings
+                optimizer = torch.optim.Adam(
+                    [track_embeddings[0, i * num_tracks + track_idx, :]], lr=1e-3
+                )
+
+                # Optimization loop
+                for _ in range(step):  # Number of optimization steps
+                    optimizer.zero_grad()
+
+                    # Compute the loss (example: cosine similarity loss)
+                    track_embedding = track_embeddings[j, i * num_tracks + track_idx, :]
+
+                    # Normalize the embeddings
+                    track_embedding_norm = track_embedding / track_embedding.norm(dim=0, keepdim=True)
+                    text_token_norm = text_token / text_token.norm(dim=0, keepdim=True)
+
+                    # Cosine similarity loss
+                    loss = -torch.dot(track_embedding_norm, text_token_norm)
+
+                    # Backpropagation
+                    loss.backward()
+                    optimizer.step()
+
+                    track_embeddings[j, i * num_tracks + track_idx, :] = track_embedding
+            else:
+                raise ValueError(f"Unknown optimization method: {method}")
