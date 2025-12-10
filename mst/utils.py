@@ -81,7 +81,7 @@ def run_diffmst(
     use_master_bus = True
     use_output_fader = True
 
-    analysis_len = 262144
+    analysis_len = 44100 * 10
     meter = pyln.Meter(44100)
 
     # crop the input tracks and reference mix to the analysis length
@@ -121,12 +121,10 @@ def run_diffmst(
 
     norm_analysis_tracks = torch.cat(norm_analysis_tracks, dim=1)
     norm_tracks = torch.cat(norm_tracks, dim=1)
-    print(norm_analysis_tracks.shape, norm_tracks.shape)
 
     # take only first 16 tracks
     # norm_tracks = norm_tracks[:, :16, :]
     # norm_analysis_tracks = norm_analysis_tracks[:, :16, :]
-    print(norm_analysis_tracks.shape, norm_tracks.shape)
 
     # make tensor contiguous
     norm_analysis_tracks = norm_analysis_tracks.contiguous()

@@ -79,7 +79,7 @@ model:
             num_master_bus_control_params: 26
             num_layers: 12
             nhead: 8
-            train_only_proj_layer: false
+            train_only_proj_layer: true
             freeze_proj_layer: true
        
     loss: 
