@@ -81,7 +81,8 @@ model:
             num_layers: 12
             nhead: 8
             train_only_proj_layer: false
-       
+            freeze_proj_layer: true
+
     loss: 
       class_path: mst.loss.AudioFeatureLoss
       init_args:

@@ -1,13 +1,13 @@
 seed_everything: 42
 # use ckpt_path to load a model from a checkpoint
-# ckpt_path: /mnt/gestalt/home/rakec/output/diff-mst/dual-clap/stage1/DiffMST_dualCLAP/mgwgi8ar/checkpoints/epoch=191-step=60096.ckpt
+ckpt_path: /mnt/gestalt/home/rakec/output/diff-mst/dual-clap/stage2/DiffMST_dualCLAP/5aaqo7pa/checkpoints/epoch=199-step=62600.ckpt
 trainer:
   logger: 
     class_path: pytorch_lightning.loggers.WandbLogger
     init_args:
       project: DiffMST_dualCLAP
       # change to the directory where you want to save wandb logs
-      save_dir: /mnt/gestalt/home/rakec/output/diff-mst/dual-clap/stage1
+      save_dir: /mnt/gestalt/home/rakec/output/diff-mst/dual-clap/stage2-tune
   enable_checkpointing: true
   callbacks:
     - class_path: mst.callbacks.audio.LogAudioCallback

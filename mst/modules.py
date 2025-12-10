@@ -762,6 +762,7 @@ class SpectrogramEncoder(torch.nn.Module):
         hop_length: int = 512,
         input_batchnorm: bool = False,
         encoder_batchnorm: bool = True,
+        freeze: bool = False,
     ) -> None:
         super().__init__()
         self.embed_dim = embed_dim
@@ -784,6 +785,10 @@ class SpectrogramEncoder(torch.nn.Module):
         else:
             self.bn = torch.nn.Identity()
 
+        if freeze:
+            for param in self.model.parameters():
+                param.requires_grad = False
+
     def forward(self, x: torch.torch.Tensor) -> torch.torch.Tensor:
         """Process waveform as a spectrogram and return single embedding.
 
@@ -791,7 +796,7 @@ class SpectrogramEncoder(torch.nn.Module):
             x (torch.torch.Tensor): Monophonic waveform torch.Tensor of shape (bs, chs, seq_len).
 
         Returns:
-            embed (torch.Tenesor): Embedding torch.Tensor of shape (bs, embed_dim)
+            embed (torch.Tensor): Embedding torch.Tensor of shape (bs, embed_dim)
         """
 
         bs, chs, seq_len = x.size()
@@ -833,7 +838,8 @@ class TransformerController(torch.nn.Module):
         nhead: int = 8,
         use_fx_bus: bool = False,
         use_master_bus: bool = False,
-        train_only_proj_layer: bool = False
+        train_only_proj_layer: bool = False,
+        freeze_proj_layer: bool = False,
     ) -> None:
         """Transformer based Controller that predicts mix parameters given track and reference mix embeddings.
 
@@ -866,11 +872,7 @@ class TransformerController(torch.nn.Module):
             proj_layer, 
             num_layers=3
         )
-        self.mix_adapter = torch.nn.Sequential(
-            torch.nn.Linear(embed_dim, embed_dim * 4),
-            torch.nn.ReLU(),
-            torch.nn.Linear(embed_dim * 4, embed_dim)
-        )
+        self.mix_adapter = torch.nn.Linear(embed_dim, embed_dim)
 
         self.track_embedding = torch.nn.Parameter(torch.randn(1, 1, embed_dim))
         self.mix_embedding = torch.nn.Parameter(torch.randn(1, 2, embed_dim))
@@ -892,7 +894,7 @@ class TransformerController(torch.nn.Module):
         )
 
         if self.train_only_proj_layer:
-            # Freeze all parameters except query & attention for ref_mix projection
+            # Freeze all parameters except mix projection parts
             for param in self.parameters():
                 param.requires_grad = False
             for param in self.mix_transformer.parameters():
@@ -900,6 +902,13 @@ class TransformerController(torch.nn.Module):
             for param in self.mix_adapter.parameters():
                 param.requires_grad = True
             self.mix_query.requires_grad = True
+        
+        if freeze_proj_layer:
+            for param in self.mix_transformer.parameters():
+                param.requires_grad = False
+            for param in self.mix_adapter.parameters():
+                param.requires_grad = False
+            self.mix_query.requires_grad = False
 
     def forward(
         self,
