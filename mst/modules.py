@@ -291,7 +291,7 @@ class AdvancedMixConsole(torch.nn.Module):
         # restore tracks to original shape
         # tracks = tracks.view(bs, num_tracks, seq_len)
         
-        print(f"tracks shape before panner: {tracks.shape}")
+        # print(f"tracks shape before panner: {tracks.shape}")
 
         if use_track_panner:
             tracks = stereo_panner(
@@ -300,9 +300,9 @@ class AdvancedMixConsole(torch.nn.Module):
                 **track_param_dict["stereo_panner"],
             )
         else:
-            tracks = tracks.unsqueeze(1).repeat(1, 2, 1)
+            tracks = tracks.unsqueeze(1).repeat(1, 2, 1, 1)
         
-        print(f"tracks shape after panner: {tracks.shape}")
+        # print(f"tracks shape after panner: {tracks.shape}")
 
         # create stereo bus via summing
         master_bus = tracks.sum(dim=2)  # bs, 2, seq_len
