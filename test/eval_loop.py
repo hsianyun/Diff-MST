@@ -257,6 +257,7 @@ def main():
                     torchaudio.save(mix_filepath, mix_analysis.view(chs, -1), 44100)
                     
         elif c_type == "text":
+            text = args.control_info[c_idx]
             print(f"[INFO] Using text prompt: {text[2]}, weight: {text[1]}, track: {text[0]}")
             
             example = {
