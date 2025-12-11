@@ -281,6 +281,10 @@ def main():
                 model = model.to("cpu") if model is not None else None
                 mix_console = mix_console.to("cpu") if mix_console is not None else None
                 func = method["func"]
+                
+                prev_track_param_dict = pred_track_param_dict if example["ref"][0] == -1 else None
+                prev_fx_bus_param_dict = pred_fx_bus_param_dict if example["ref"][0] == -1 else None
+                prev_master_bus_param_dict = pred_master_bus_param_dict if example["ref"][0] >= 0 else None
 
                 with torch.no_grad():
                     result = func(
@@ -300,6 +304,10 @@ def main():
                         pred_fx_bus_param_dict,
                         pred_master_bus_param_dict,
                     ) = result
+                    
+                    pred_fx_bus_param_dict = pred_fx_bus_param_dict if example["ref"][0] >= 0 else prev_fx_bus_param_dict
+                    pred_track_param_dict = pred_track_param_dict if example["ref"][0] >= 0 else prev_track_param_dict
+                    pred_master_bus_param_dict = pred_master_bus_param_dict if example["ref"][0] == -1 else prev_master_bus_param_dict
 
                     bs, chs, seq_len = pred_mix.shape
 

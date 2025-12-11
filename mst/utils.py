@@ -76,24 +76,14 @@ def run_diffmst(
         pred_master_bus_param_dict (dict): Dictionary with predicted master bus parameters.
     """
 
-    if text is not None:
-        track_idx, weight, prompt = text
-        use_track_input_fader = True if track_idx >= 0 else False
-        use_track_panner = True if track_idx >= 0 else False
-        use_track_eq = True if track_idx >= 0 else False
-        use_track_compressor = True if track_idx >= 0 else False
-        use_fx_bus = True if track_idx >= 0.0 else False
-        use_master_bus = True if track_idx == -1 else False
-        use_output_fader = True
-    else:
-        # ------ defaults ------
-        use_track_input_fader = True
-        use_track_panner = True
-        use_track_eq = True
-        use_track_compressor = True
-        use_fx_bus = False
-        use_master_bus = True
-        use_output_fader = True
+    # ------ defaults ------
+    use_track_input_fader = True
+    use_track_panner = True
+    use_track_eq = True
+    use_track_compressor = True
+    use_fx_bus = False
+    use_master_bus = True
+    use_output_fader = True
 
     analysis_len = 44100 * 10
     meter = pyln.Meter(44100)
