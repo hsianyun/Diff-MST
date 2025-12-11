@@ -25,7 +25,7 @@ def parse_args():
     parser.add_argument("--control_type", type=str, nargs='+', default=["audio"],
                         help="Control types to use for mixing (audio or text)")    
     parser.add_argument("--control_info", type=str, nargs='+', 
-                        default=["/kaggle/input/medley-db-v2/V2/Allegria_MendelssohnMovement1/Allegria_MendelssohnMovement1_MIX.wav", (-1, 0.3, "make the sound brighter"), (1, 0.25. "make the sound brighter" )],
+                        default=["/kaggle/input/medley-db-v2/V2/Allegria_MendelssohnMovement1/Allegria_MendelssohnMovement1_MIX.wav", (-1, 0.3, "make the sound brighter"), (1, 0.25, "make the sound brighter" )],
                         help="Control information (file paths for audio, text prompts for text in format: (track, weight, 'text'). If track is -1, use master bus.)")
     
     # Verse/Chorus indices
@@ -241,7 +241,7 @@ def main():
                     lufs_delta_db = target_lufs_db - mix_lufs_db
                     pred_mix = pred_mix * 10 ** (lufs_delta_db / 20)
 
-                    mix_filepath = output_dir / f"{method_name}-ref={song_section}-lufs-{int(ref_loudness_target)}.wav"
+                    mix_filepath = output_dir / f"step{c_idx}{method_name}-ref={song_section}-lufs-{int(ref_loudness_target)}.wav"
                     torchaudio.save(mix_filepath, pred_mix.view(chs, -1), 44100)
 
                     mix_analysis = pred_mix[
@@ -253,7 +253,7 @@ def main():
                     lufs_delta_db = target_lufs_db - mix_lufs_db
                     mix_analysis = mix_analysis * 10 ** (lufs_delta_db / 20)
 
-                    mix_filepath = output_dir / f"{method_name}-analysis-ref={song_section}-lufs-{int(ref_loudness_target)}.wav"
+                    mix_filepath = output_dir / f"step{c_idx}-{method_name}-analysis-ref={song_section}-lufs-{int(ref_loudness_target)}.wav"
                     torchaudio.save(mix_filepath, mix_analysis.view(chs, -1), 44100)
                     
         elif c_type == "text":
@@ -348,7 +348,7 @@ def main():
                     lufs_delta_db = target_lufs_db - mix_lufs_db
                     pred_mix = pred_mix * 10 ** (lufs_delta_db / 20)
 
-                    mix_filepath = output_dir / f"{method_name}-ref={song_section}-lufs-{int(ref_loudness_target)}.wav"
+                    mix_filepath = output_dir / f"step{c_idx}-{method_name}-ref={song_section}-lufs-{int(ref_loudness_target)}.wav"
                     torchaudio.save(mix_filepath, pred_mix.view(chs, -1), 44100)
 
                     mix_analysis = pred_mix[
@@ -360,7 +360,7 @@ def main():
                     lufs_delta_db = target_lufs_db - mix_lufs_db
                     mix_analysis = mix_analysis * 10 ** (lufs_delta_db / 20)
 
-                    mix_filepath = output_dir / f"{method_name}-analysis-ref={song_section}-lufs-{int(ref_loudness_target)}.wav"
+                    mix_filepath = output_dir / f"step{c_idx}-{method_name}-analysis-ref={song_section}-lufs-{int(ref_loudness_target)}.wav"
                     torchaudio.save(mix_filepath, mix_analysis.view(chs, -1), 44100)
 
 if __name__ == "__main__":
