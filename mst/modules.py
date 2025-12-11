@@ -289,7 +289,9 @@ class AdvancedMixConsole(torch.nn.Module):
         tracks = tracks.view(bs, num_tracks, seq_len)
 
         # restore tracks to original shape
-        tracks = tracks.view(bs, num_tracks, seq_len)
+        # tracks = tracks.view(bs, num_tracks, seq_len)
+        
+        print(f"tracks shape before panner: {tracks.shape}")
 
         if use_track_panner:
             tracks = stereo_panner(
