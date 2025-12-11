@@ -25,7 +25,7 @@ def parse_args():
     parser.add_argument("--control_type", type=str, nargs='+', default=["audio"],
                         help="Control types to use for mixing (audio or text)")    
     parser.add_argument("--control_info", type=str, nargs='+', 
-                        default=["/kaggle/input/medley-db-v2/V2/TleilaxEnsemble_Late/TleilaxEnsemble_Late_MIX.wav", (2, 0, "The violin is dark")],
+                        default=["/kaggle/input/medley-db-v2/V2/TleilaxEnsemble_Late/TleilaxEnsemble_Late_MIX.wav", (-1, 0, "The violin is dark")],
                         help="Control information (file paths for audio, text prompts for text in format: (track, weight, 'text'). If track is -1, use master bus.)")
     
     # Verse/Chorus indices
@@ -257,9 +257,11 @@ def main():
 
             print(f"[INFO] reference audio shape: {ref_audio.shape}")
             
-            prev_track_param_dict = pred_track_param_dict if example["ref"][0] == -1 else None
-            prev_fx_bus_param_dict = pred_fx_bus_param_dict if example["ref"][0] == -1 else None
-            prev_master_bus_param_dict = pred_master_bus_param_dict if example["ref"][0] >= 0 else None
+            # prev_track_param_dict = pred_track_param_dict if example["ref"][0] == -1 else None
+            # prev_fx_bus_param_dict = pred_fx_bus_param_dict if example["ref"][0] == -1 else None
+            # prev_master_bus_param_dict = pred_master_bus_param_dict if example["ref"][0] >= 0 else None
+            
+            prev_master_bus_param_dict = pred_master_bus_param_dict
 
             for song_section in ["verse", "chorus"]:
                 print(f"[INFO] Mixing {song_section}...")
@@ -306,10 +308,12 @@ def main():
                         pred_master_bus_param_dict,
                     ) = result
                     
-                    pred_fx_bus_param_dict = pred_fx_bus_param_dict if example["ref"][0] >= 0 else prev_fx_bus_param_dict
-                    pred_track_param_dict = pred_track_param_dict if example["ref"][0] >= 0 else prev_track_param_dict
-                    pred_master_bus_param_dict = pred_master_bus_param_dict if example["ref"][0] == -1 else prev_master_bus_param_dict
+                    # pred_fx_bus_param_dict = pred_fx_bus_param_dict if example["ref"][0] >= 0 else prev_fx_bus_param_dict
+                    # pred_track_param_dict = pred_track_param_dict if example["ref"][0] >= 0 else prev_track_param_dict
+                    # pred_master_bus_param_dict = pred_master_bus_param_dict if example["ref"][0] == -1 else prev_master_bus_param_dict
 
+                    pred_master_bus_param_dict = prev_master_bus_param_dict
+                    
                     bs, chs, seq_len = pred_mix.shape
 
                     mix_lufs_db = meter.integrated_loudness(
