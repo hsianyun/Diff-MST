@@ -273,7 +273,7 @@ def main():
             if example["ref"][0] < -1 or example["ref"][0] >= num_tracks:
                 raise ValueError(f"Invalid track index {example['ref'][0]} for {num_tracks} tracks.")
 
-            if rexample["ref"][0] == -1:
+            if example["ref"][0] == -1:
                 ref_audio = pred_mix
             else:
                 ref_audio = pred_mixed_tracks
