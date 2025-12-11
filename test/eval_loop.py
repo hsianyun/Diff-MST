@@ -192,18 +192,6 @@ def main():
                 mix_tracks = tracks[..., track_start_idx : track_start_idx + (44100 * 10 * 2)]
                 track_start_idx = 0
 
-                ref_analysis = ref_audio[..., ref_start_idx : ref_start_idx + 44100 * 10]
-                ref_loudness_target = -14.0
-                ref_filepath = output_dir / f"ref_{song_section}_lufs{ref_loudness_target}.wav"
-
-                ref_lufs_db = meter.integrated_loudness(
-                    ref_analysis.squeeze().permute(1, 0).numpy()
-                )
-                lufs_delta_db = ref_loudness_target - ref_lufs_db
-                ref_analysis = ref_analysis * 10 ** (lufs_delta_db / 20)
-
-                torchaudio.save(ref_filepath, ref_analysis.squeeze(), 44100)
-
 
                 method_name = "diffmst"
                 method = methods[method_name]
@@ -241,20 +229,8 @@ def main():
                     lufs_delta_db = target_lufs_db - mix_lufs_db
                     pred_mix = pred_mix * 10 ** (lufs_delta_db / 20)
 
-                    mix_filepath = output_dir / f"step{c_idx}{method_name}-ref={song_section}-lufs-{int(ref_loudness_target)}.wav"
+                    mix_filepath = output_dir / f"step{c_idx}-{method_name}-ref={song_section}-lufs-{int(ref_loudness_target)}.wav"
                     torchaudio.save(mix_filepath, pred_mix.view(chs, -1), 44100)
-
-                    mix_analysis = pred_mix[
-                        ..., track_start_idx : track_start_idx + (44100 * 10)
-                    ]
-                    mix_lufs_db = meter.integrated_loudness(
-                        mix_analysis.squeeze(0).permute(1, 0).numpy()
-                    )
-                    lufs_delta_db = target_lufs_db - mix_lufs_db
-                    mix_analysis = mix_analysis * 10 ** (lufs_delta_db / 20)
-
-                    mix_filepath = output_dir / f"step{c_idx}-{method_name}-analysis-ref={song_section}-lufs-{int(ref_loudness_target)}.wav"
-                    torchaudio.save(mix_filepath, mix_analysis.view(chs, -1), 44100)
                     
         elif c_type == "text":
             text = args.control_info[c_idx]
@@ -294,22 +270,6 @@ def main():
                     print(f"[Warning] Tracks too short for this section.")
                 if ref_start_idx + 44100 * 10 > ref_audio.shape[-1]:
                     print(f"[Warning] Reference too short for this section.")
-
-                mix_tracks = tracks
-                mix_tracks = tracks[..., track_start_idx : track_start_idx + (44100 * 10 * 2)]
-                track_start_idx = 0
-
-                ref_analysis = ref_audio[..., ref_start_idx : ref_start_idx + 44100 * 10]
-                ref_loudness_target = -14.0
-                ref_filepath = output_dir / f"ref_{song_section}_lufs{ref_loudness_target}.wav"
-
-                ref_lufs_db = meter.integrated_loudness(
-                    ref_analysis.squeeze().permute(1, 0).numpy()
-                )
-                lufs_delta_db = ref_loudness_target - ref_lufs_db
-                ref_analysis = ref_analysis * 10 ** (lufs_delta_db / 20)
-
-                torchaudio.save(ref_filepath, ref_analysis.squeeze(), 44100)
 
 
                 method_name = "diffmst"
@@ -352,17 +312,6 @@ def main():
                     mix_filepath = output_dir / f"step{c_idx}-{method_name}-ref={song_section}-lufs-{int(ref_loudness_target)}.wav"
                     torchaudio.save(mix_filepath, pred_mix.view(chs, -1), 44100)
 
-                    mix_analysis = pred_mix[
-                        ..., track_start_idx : track_start_idx + (44100 * 10)
-                    ]
-                    mix_lufs_db = meter.integrated_loudness(
-                        mix_analysis.squeeze(0).permute(1, 0).numpy()
-                    )
-                    lufs_delta_db = target_lufs_db - mix_lufs_db
-                    mix_analysis = mix_analysis * 10 ** (lufs_delta_db / 20)
-
-                    mix_filepath = output_dir / f"step{c_idx}-{method_name}-analysis-ref={song_section}-lufs-{int(ref_loudness_target)}.wav"
-                    torchaudio.save(mix_filepath, mix_analysis.view(chs, -1), 44100)
 
 if __name__ == "__main__":
     main()
