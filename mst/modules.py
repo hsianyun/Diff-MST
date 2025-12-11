@@ -1318,5 +1318,5 @@ class CLAPTextEncoder(nn.Module):
         Returns:
             text embeddings: Torch tensor of shape (1, embed_dim)
         """
-        X = self.get_text_embedding([x])
+        X = self.model.get_text_embedding([x])
         return X
