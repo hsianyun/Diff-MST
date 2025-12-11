@@ -79,7 +79,7 @@ class MixStyleTransferModel(torch.nn.Module):
             text_embed = self.text_encoder(text_prompt) # get the text embed
 
             track_idx = track_idx if track_idx >=0 else 0
-            num_tracks_mix = mix_embeds.size(2) // 2
+            num_tracks_mix = mix_embeds.size(1) // 2
 
             for i in range(2):
                 mix_embeds_selected = mix_embeds[0, track_idx + i * num_tracks_mix, :] # select the embed for the specified track
