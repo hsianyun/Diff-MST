@@ -30,12 +30,14 @@ class MixStyleTransferModel(torch.nn.Module):
         self,
         track_encoder: torch.nn.Module,
         mix_encoder: torch.nn.Module,
+        text_encoder: torch.nn.Module,
         controller: torch.nn.Module,
         sum_and_diff: bool = False,
     ) -> None:
         super().__init__()
         self.track_encoder = track_encoder
         self.mix_encoder = mix_encoder
+        self.text_encoder = text_encoder
         self.controller = controller
         self.sum_and_diff = sum_and_diff
 
@@ -43,6 +45,7 @@ class MixStyleTransferModel(torch.nn.Module):
         self,
         tracks: torch.torch.Tensor,
         ref_mix: torch.torch.Tensor,
+        text: Optional[tuple] = None,                                       
         track_padding_mask: Optional[torch.Tensor] = None,
     ):
         bs, num_tracks, seq_len = tracks.size()
@@ -69,6 +72,19 @@ class MixStyleTransferModel(torch.nn.Module):
         else:
             mix_embeds = self.mix_encoder(ref_mix.view(bs * 2, 1, -1))
             mix_embeds = mix_embeds.view(bs, 2, -1)  # restore
+
+        # Text optimization
+        if text is not None:
+            track_idx, alpha, text_prompt = text
+            text_embed = self.text_encoder(text_prompt) # get the text embed
+
+            track_idx = track_idx if track_idx >=0 else 0
+            num_tracks_mix = mix_embeds.size(2) // 2
+
+            for i in range(2):
+                mix_embeds_selected = mix_embeds[0, track_idx + i * num_tracks_mix, :] # select the embed for the specified track
+                mix_embeds[0, track_idx + i * num_tracks_mix, :] = (1 - alpha) * mix_embeds_selected + alpha * text_embed  # linear interpolation
+
 
         # controller will predict mix parameters for each stem based on embeds
         track_params, fx_bus_params, master_bus_params = self.controller(
@@ -1273,4 +1289,34 @@ class CLAPEncoder(nn.Module):
 
         X = X.view(bs, chs, -1)
 
+        return X
+
+class CLAPTextEncoder(nn.Module):
+    def __init__(
+        self, freeze: bool = True, 
+        ckpt_path: Optional[str] = None, htsat_base: bool = False
+    ):
+        super().__init__()
+
+        if htsat_base:
+            self.model = laion_clap.CLAP_Module(enable_fusion=False, amodel="HTSAT-base")
+        else:
+            self.model = laion_clap.CLAP_Module(enable_fusion=False)
+        if ckpt_path is not None:
+            self.model.load_ckpt(ckpt_path)
+        else:
+            self.model.load_ckpt()
+        
+        if freeze:
+            for param in self.parameters():
+                param.requires_grad = False
+        
+    def forward(self, x: str):
+        """
+        Args:
+            x: String input
+        Returns:
+            text embeddings: Torch tensor of shape (1, embed_dim)
+        """
+        X = self.get_text_embedding([x])
         return X

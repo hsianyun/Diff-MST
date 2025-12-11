@@ -53,6 +53,7 @@ def run_diffmst(
     ref: torch.Tensor,
     model: torch.nn.Module,
     mix_console: torch.nn.Module,
+    text: Optional[tuple] = None,
     track_start_idx: int = 0,
     ref_start_idx: int = 0,
 ):
@@ -63,23 +64,36 @@ def run_diffmst(
         ref (Tensor): Reference mix with shape (bs, 2, seq_len).
         model (torch.nn.Module): MixStyleTransferModel instance.
         mix_console (torch.nn.Module): MixConsole instance.
+        text (tuple, optional): Tuple of text strings with settings. (track_idx, weight, text). Default: None.
         track_start_idx (int, optional): Start index of the track to use. Default: 0.
         ref_start_idx (int, optional): Start index of the reference mix to use. Default: 0.
 
     Returns:
         pred_mix (Tensor): Predicted mix with shape (bs, 2, seq_len).
+        pred_mixed_tracks (Tensor): Predicted mixed tracks with shape (bs, num_tracks, 2, seq_len).
         pred_track_param_dict (dict): Dictionary with predicted track parameters.
         pred_fx_bus_param_dict (dict): Dictionary with predicted fx bus parameters.
         pred_master_bus_param_dict (dict): Dictionary with predicted master bus parameters.
     """
-    # ------ defaults ------
-    use_track_input_fader = True
-    use_track_panner = True
-    use_track_eq = True
-    use_track_compressor = True
-    use_fx_bus = False
-    use_master_bus = True
-    use_output_fader = True
+
+    if text is not None:
+        track_idx, weight, prompt = text
+        use_track_input_fader = True if track_idx >= 0 else False
+        use_track_panner = True if track_idx >= 0 else False
+        use_track_eq = True if track_idx >= 0 else False
+        use_track_compressor = True if track_idx >= 0 else False
+        use_fx_bus = True if track_idx >= 0.0 else False
+        use_master_bus = True if track_idx == -1 else False
+        use_output_fader = True
+    else:
+        # ------ defaults ------
+        use_track_input_fader = True
+        use_track_panner = True
+        use_track_eq = True
+        use_track_compressor = True
+        use_fx_bus = False
+        use_master_bus = True
+        use_output_fader = True
 
     analysis_len = 44100 * 10
     meter = pyln.Meter(44100)
@@ -132,7 +146,7 @@ def run_diffmst(
 
     #  ---- run model to estimate mix parmaeters using analysis audio ----
     pred_track_params, pred_fx_bus_params, pred_master_bus_params = model(
-        norm_analysis_tracks, analysis_ref
+        norm_analysis_tracks, analysis_ref, text=text
     )
 
     # ------- generate a mix using the predicted mix console parameters -------
@@ -184,6 +198,7 @@ def run_diffmst(
 
     return (
         pred_mix,
+        pred_mixed_tracks,
         pred_track_param_dict,
         pred_fx_bus_param_dict,
         pred_master_bus_param_dict,
@@ -220,6 +235,15 @@ def load_diffmst(config_path: str, ckpt_path: str, map_location: str = "cpu"):
         **submodule_configs["mix_encoder"]["init_args"]
     )
 
+    # create mix encoder module
+    module_path, class_name = submodule_configs["text_encoder"]["class_path"].rsplit(
+        ".", 1
+    )
+    module = import_module(module_path)
+    text_encoder = getattr(module, class_name)(
+        **submodule_configs["text_encoder"]["init_args"]
+    )
+
     # create controller module
     module_path, class_name = submodule_configs["controller"]["class_path"].rsplit(
         ".", 1
@@ -252,6 +276,7 @@ def load_diffmst(config_path: str, ckpt_path: str, map_location: str = "cpu"):
         if k.startswith("model.mix_encoder"):
             state_dict[k.replace("model.mix_encoder.", "", 1)] = v
     mix_encoder.load_state_dict(state_dict)
+    text_encoder.load_state_dict(state_dict)
 
     state_dict = {}
     for k, v in checkpoint["state_dict"].items():
@@ -268,6 +293,7 @@ def load_diffmst(config_path: str, ckpt_path: str, map_location: str = "cpu"):
     model = MixStyleTransferModel(
         track_encoder,
         mix_encoder,
+        text_encoder,
         controller,
     )
     model.eval()
