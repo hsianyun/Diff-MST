@@ -25,7 +25,7 @@ def parse_args():
     parser.add_argument("--control_type", type=str, nargs='+', default=["audio"],
                         help="Control types to use for mixing (audio or text)")    
     parser.add_argument("--control_info", type=str, nargs='+', 
-                        default=["/mnt/gestalt/home/rakec/data/diff-mst/MedleyDB_V2/V2/TleilaxEnsemble_Late/TleilaxEnsemble_Late_MIX.wav", (-1, 1, "text")],
+                        default=["/kaggle/input/medley-db-v2/V2/Allegria_MendelssohnMovement1/Allegria_MendelssohnMovement1_MIX.wav", (-1, 0.3, "make the sound brighter"), (1, 0.25. "make the sound brighter" )],
                         help="Control information (file paths for audio, text prompts for text in format: (track, weight, 'text'). If track is -1, use master bus.)")
     
     # Verse/Chorus indices
