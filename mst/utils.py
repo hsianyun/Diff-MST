@@ -56,6 +56,9 @@ def run_diffmst(
     text: Optional[tuple] = None,
     track_start_idx: int = 0,
     ref_start_idx: int = 0,
+    prev_fx_bus_param_dict: Optional[dict] = None,
+    prev_master_bus_param_dict: Optional[dict] = None,
+    prev_track_param_dict: Optional[dict] = None,
 ):
     """Run the differentiable mix style transfer model.
 
@@ -138,6 +141,21 @@ def run_diffmst(
     pred_track_params, pred_fx_bus_params, pred_master_bus_params = model(
         norm_analysis_tracks, analysis_ref, text=text
     )
+    
+    # Master bus control with text
+    if text is not None and text[0] == -1:
+        if prev_track_param_dict is None:
+            assert False, "Previous track parameters must be provided when controlling master bus with text."
+        pred_track_params = prev_track_param_dict
+        if prev_fx_bus_param_dict is None:
+            assert False, "Previous fx bus parameters must be provided when controlling master bus with text."
+        pred_fx_bus_params = prev_fx_bus_param_dict
+        
+    # Track control with text
+    elif text is not None and text[0] >= 0:
+        if prev_master_bus_param_dict is None:
+            assert False, "Previous master bus parameters must be provided when controlling track with text."
+        pred_master_bus_params = prev_master_bus_param_dict
 
     # ------- generate a mix using the predicted mix console parameters -------
     # apply with sliding window of 262144 samples with overlap
