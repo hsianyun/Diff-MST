@@ -38,19 +38,20 @@ model:
         #     n_fft: 2048
         #     hop_length: 512
         #     input_batchnorm: false
-        # track_encoder:
-        #   class_path: mst.modules.SpatialCLAPEncoder
-        #   init_args:
-        #     joint_embed_shape: 512
-        #     pretrained: true
-        #     sample_rate: 44100
+        #     freeze: false
         track_encoder:
-          class_path: mst.modules.CLAPEncoder
+          class_path: mst.modules.SpatialCLAPEncoder
           init_args:
+            joint_embed_shape: 512
+            pretrained: true
             sample_rate: 44100
-            freeze: true
-            ckpt_path: /mnt/gestalt/home/rakec/checkpoint/CLAP/music_audioset_epoch_15_esc_90.14.pt
-            htsat_base: true
+        # track_encoder:
+        #   class_path: mst.modules.CLAPEncoder
+        #   init_args:
+        #     sample_rate: 44100
+        #     freeze: true
+        #     ckpt_path: /mnt/gestalt/home/rakec/checkpoint/CLAP/music_audioset_epoch_15_esc_90.14.pt
+        #     htsat_base: true
         # mix_encoder: 
         #   class_path: mst.modules.SpectrogramEncoder
         #   init_args:
@@ -58,16 +59,23 @@ model:
         #     n_fft: 2048
         #     hop_length: 512
         #     input_batchnorm: false
-        # mix_encoder:
-        #   class_path: mst.modules.SpatialCLAPEncoder
-        #   init_args:
-        #     joint_embed_shape: 512
-        #     pretrained: true
-        #     sample_rate: 44100
+        #     freeze: false
         mix_encoder:
-          class_path: mst.modules.CLAPEncoder
+          class_path: mst.modules.SpatialCLAPEncoder
           init_args:
+            joint_embed_shape: 512
+            pretrained: true
             sample_rate: 44100
+        # mix_encoder:
+        #   class_path: mst.modules.CLAPEncoder
+        #   init_args:
+        #     sample_rate: 44100
+        #     freeze: true
+        #     ckpt_path: /mnt/gestalt/home/rakec/checkpoint/CLAP/music_audioset_epoch_15_esc_90.14.pt
+        #     htsat_base: true
+        text_encoder:
+          class_path: mst.modules.CLAPTextEncoder
+          init_args:
             freeze: true
             ckpt_path: /mnt/gestalt/home/rakec/checkpoint/CLAP/music_audioset_epoch_15_esc_90.14.pt
             htsat_base: true
@@ -88,10 +96,12 @@ model:
       init_args:
         sample_rate: 44100
         stem_separation: false
-        use_clap: false
+        use_clap: true
+        ckpt_path: /mnt/gestalt/home/rakec/checkpoint/CLAP/music_audioset_epoch_15_esc_90.14.pt
         weights: 
           - 0.1 # rms
           - 0.001 # crest factor
           - 1.0  # stereo width
           - 1.0 # stereo imbalance
           - 0.1 # bark spectrum
+          - 1.0 # CLAP
