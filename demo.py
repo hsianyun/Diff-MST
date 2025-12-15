@@ -30,7 +30,26 @@ with gr.Blocks() as demo:
     with gr.Row():
         with gr.Column():
             gr.Markdown("<h2>Audio Control</h2>")
+            ref_file = gr.Audio(label="Ref song", type="filepath", sources="upload", elem_classes="audio")
+            gr.Slider(label="Ref Start Time (s)", minimum=0, maximum=180, step=0.1)
+            gr.Button("Generate Mixing with Audio Control")
         with gr.Column():
             gr.Markdown("<h2>Text Control</h2>")
+            with gr.Row():
+                gr.Button("Brightness")
+                gr.Button("Compressed")
+                gr.Button("Loudness")
+                gr.Button("Panning")
+            gr.Dropdown(
+                choices=["Track 1", "Track 2", "Track 3", "Track 4", "Track 5", "Track 6", "Track 7", "Track 8", "Mastering"], 
+                label="Modified Tracks", interactive=True
+            )
+            gr.Slider(label="Text Control Strength", minimum=0, maximum=100, step=0.01)
+            gr.Slider(label="Style Strength", minimum=0, maximum=100, step=0.01)
+            gr.Button("Generate Mixing with Text Control")
 
-demo.launch(theme=gr.themes.Ocean(), css=CUSTOM_CSS)
+    gr.Markdown("<h2>Output Mixed Track</h2>")
+    with gr.Row():
+        output_audio = gr.Audio(label="Output Mixed Track", type="filepath", sources="upload", elem_classes="audio")
+
+demo.launch(theme=gr.themes.Default(), css=CUSTOM_CSS)
