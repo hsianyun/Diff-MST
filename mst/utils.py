@@ -136,9 +136,6 @@ def run_diffmst(
         if prev_track_param_dict is None:
             assert False, "Previous track parameters must be provided when controlling master bus with text."
         pred_track_params = prev_track_param_dict
-        if prev_fx_bus_param_dict is None:
-            assert False, "Previous fx bus parameters must be provided when controlling master bus with text."
-        pred_fx_bus_params = prev_fx_bus_param_dict
         
     # Track control with text
     elif text is not None and text[0] >= 0:

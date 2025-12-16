@@ -1,5 +1,5 @@
 import gradio as gr
-from func import slider_max_update, audio_control
+from func import slider_max_update, audio_control, text_control
 
 CUSTOM_CSS = """
     .audio {
@@ -47,6 +47,7 @@ with gr.Blocks() as demo:
                 )
             text_strength_slider = gr.Slider(label="Text Control Strength", minimum=0, maximum=100, step=0.01, interactive=True)
             style_strength_slider = gr.Slider(label="Style Strength", minimum=0, maximum=100, step=0.01, interactive=True)
+            ref_st = gr.Slider(label="Ref Start Time (s)", minimum=0, maximum=0, step=0.1, interactive=True)
             btn_text_gen = gr.Button("Generate Mixing with Text Control")
 
     gr.Markdown("<h2>Output Mixed Track</h2>")
@@ -73,12 +74,30 @@ with gr.Blocks() as demo:
         outputs=[ref_audio_st]
     )
 
+    output_mix.change(
+        fn=slider_max_update,
+        inputs=[output_mix],
+        outputs=[ref_st]
+    )
+
     btn_audio_gen.click(
         fn=audio_control,
         inputs=[
             raw_file_1, raw_file_2, raw_file_3, raw_file_4, 
             raw_file_5, raw_file_6, raw_file_7, raw_file_8, 
             ref_file, ref_audio_st
+        ],
+        outputs=[output_mix, output_track_1, output_track_2, output_track_3, output_track_4,
+                output_track_5, output_track_6, output_track_7, output_track_8]
+    )
+
+    btn_text_gen.click(
+        fn=text_control,
+        inputs=[
+            raw_file_1, raw_file_2, raw_file_3, raw_file_4, 
+            raw_file_5, raw_file_6, raw_file_7, raw_file_8,
+            text_style_dropdown, target_track_dropdown,
+            text_strength_slider, style_strength_slider, ref_st
         ],
         outputs=[output_mix, output_track_1, output_track_2, output_track_3, output_track_4,
                 output_track_5, output_track_6, output_track_7, output_track_8]
