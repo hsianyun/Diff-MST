@@ -47,7 +47,7 @@ model:
           init_args:
             sample_rate: 44100
             freeze: true
-            ckpt_path: /kaggle/working/Diff-MST/music_audioset_epoch_15_esc_90.14.pt
+            ckpt_path: /mnt/gestalt/home/rakec/checkpoint/CLAP/music_audioset_epoch_15_esc_90.14.pt
             htsat_base: true
         # mix_encoder: 
         #   class_path: mst.modules.SpectrogramEncoder
@@ -68,13 +68,13 @@ model:
           init_args:
             sample_rate: 44100
             freeze: true
-            ckpt_path: /kaggle/working/Diff-MST/music_audioset_epoch_15_esc_90.14.pt
+            ckpt_path: /mnt/gestalt/home/rakec/checkpoint/CLAP/music_audioset_epoch_15_esc_90.14.pt
             htsat_base: true
         text_encoder:
           class_path: mst.modules.CLAPTextEncoder
           init_args:
             freeze: true
-            ckpt_path: /kaggle/working/Diff-MST/music_audioset_epoch_15_esc_90.14.pt
+            ckpt_path: /mnt/gestalt/home/rakec/checkpoint/CLAP/music_audioset_epoch_15_esc_90.14.pt
             htsat_base: true
         controller:
           class_path: mst.modules.TransformerController
@@ -85,7 +85,7 @@ model:
             num_master_bus_control_params: 26
             num_layers: 12
             nhead: 8
-            train_only_proj_layer: true
+            train_only_proj_layer: false
             freeze_proj_layer: true
        
     loss: 

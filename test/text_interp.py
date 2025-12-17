@@ -20,10 +20,11 @@ def main():
     model.eval()
 
     text_prompts = [
-        "the sound is dark", "the sound is bright"
+        "the sound is extremely punchy", "the sound is slightly punchy"
+        , "the sound is slightly flat", "the sound is extremely flat"
     ]
-    edge_prompts = ["the sound is dark", "the sound is bright"]
-    alphas = [0.0, 1.0]
+    edge_prompts = ["the sound is extremely punchy", "the sound is extremely flat"]
+    alphas = [0.0, 0.33, 0.67, 1.0]
 
     text_embeddings = model.get_text_embedding(text_prompts)
     edge_embeddings = model.get_text_embedding(edge_prompts)
