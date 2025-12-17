@@ -3,14 +3,14 @@ import torchaudio
 import numpy as np
 import gradio as gr
 import pyloudnorm as pyln
-from mst.utils import load_diffmst, run_diffmst
+from mst.utils import load_diffmst, run_diffmst, batch_stereo_peak_normalize, batch_stereo_tracks_peak_normalize
 
 meter = pyln.Meter(44100)
 
 method = {
     "model": load_diffmst(
         config_path="./test/naive.yaml",
-        ckpt_path="/mnt/gestalt/home/rakec/output/diff-mst/epoch=247-step=77624.ckpt",
+        ckpt_path="/mnt/gestalt/home/rakec/output/diff-mst/dual-clap/stage1-tune/DiffMST_dualCLAP_new/cwhdk8cr/checkpoints/epoch=47-step=15024.ckpt",
     ),
     "func": run_diffmst
 }
@@ -62,6 +62,7 @@ def audio_control(
     ref_audio, ref_sr = process_input(ref_file)
     assert ref_sr == 44100, "All audio files must have a sample rate of 44.1kHz."
     ref_audio = ref_audio.unsqueeze(0)
+    ref_audio = batch_stereo_peak_normalize(ref_audio)
 
     raw_files = [
         raw_file_1, raw_file_2, raw_file_3, raw_file_4,
@@ -240,9 +241,11 @@ def text_control(
     if target_track == "Mastering":
         track_idx = -1
         ref_audio = prev_mix
+        ref_audio = batch_stereo_peak_normalize(ref_audio)
     else:
         track_idx = int(target_track.split(" ")[-1]) - 1
         ref_audio = prev_mixed_tracks
+        ref_audio = batch_stereo_tracks_peak_normalize(ref_audio)
         bs, chs, num_tracks, seq_len = ref_audio.shape
         ref_audio = ref_audio.view(bs, chs*num_tracks, -1)
     

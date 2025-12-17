@@ -52,32 +52,26 @@ with gr.Blocks() as demo:
 
     gr.Markdown("<h2>Output Mixed Track</h2>")
     with gr.Row():
-        output_mix = gr.Audio(label="Output Mixed Track", type="numpy", sources="upload", elem_classes="audio")
+        output_mix = gr.Audio(label="Output Mixed Track", type="numpy", elem_classes="audio")
     with gr.Row():
         with gr.Column():
-            output_track_1 = gr.Audio(label="Output Track 1", type="numpy", sources="upload", elem_classes="audio")
-            output_track_5 = gr.Audio(label="Output Track 5", type="numpy", sources="upload", elem_classes="audio")
+            output_track_1 = gr.Audio(label="Output Track 1", type="numpy", elem_classes="audio")
+            output_track_5 = gr.Audio(label="Output Track 5", type="numpy", elem_classes="audio")
         with gr.Column():
-            output_track_2 = gr.Audio(label="Output Track 2", type="numpy", sources="upload", elem_classes="audio")
-            output_track_6 = gr.Audio(label="Output Track 6", type="numpy", sources="upload", elem_classes="audio")
+            output_track_2 = gr.Audio(label="Output Track 2", type="numpy", elem_classes="audio")
+            output_track_6 = gr.Audio(label="Output Track 6", type="numpy", elem_classes="audio")
         with gr.Column():
-            output_track_3 = gr.Audio(label="Output Track 3", type="numpy", sources="upload", elem_classes="audio")
-            output_track_7 = gr.Audio(label="Output Track 7", type="numpy", sources="upload", elem_classes="audio")
+            output_track_3 = gr.Audio(label="Output Track 3", type="numpy", elem_classes="audio")
+            output_track_7 = gr.Audio(label="Output Track 7", type="numpy", elem_classes="audio")
         with gr.Column():
-            output_track_4 = gr.Audio(label="Output Track 4", type="numpy", sources="upload", elem_classes="audio")
-            output_track_8 = gr.Audio(label="Output Track 8", type="numpy", sources="upload", elem_classes="audio")
+            output_track_4 = gr.Audio(label="Output Track 4", type="numpy", elem_classes="audio")
+            output_track_8 = gr.Audio(label="Output Track 8", type="numpy", elem_classes="audio")
 
     ## === Functions === ##
     ref_file.change(
         fn=slider_max_update,
         inputs=[ref_file],
         outputs=[ref_audio_st]
-    )
-
-    output_mix.change(
-        fn=slider_max_update,
-        inputs=[output_mix],
-        outputs=[ref_st]
     )
 
     btn_audio_gen.click(
