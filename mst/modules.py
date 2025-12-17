@@ -98,6 +98,11 @@ class MixStyleTransferModel(torch.nn.Module):
             track_idx, text_alpha, style_alpha, text_prompt, is_panning = text
             left_embed = self.text_encoder(text_prompt[0]).squeeze(0)
             right_embed = self.text_encoder(text_prompt[1]).squeeze(0)  
+            
+            # adjust left and right embeds to be more distinct
+            distance_embed = left_embed - right_embed
+            left_embed = left_embed + 0.5 * distance_embed
+            right_embed = right_embed - 0.5 * distance_embed
 
             if is_panning:
                 text_embed = [
